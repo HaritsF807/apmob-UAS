@@ -13,19 +13,19 @@ class Formatters {
 
   // Format date to readable format (e.g., "9 Des 2025")
   static String formatDate(DateTime date) {
-    final formatter = DateFormat('d MMM yyyy', 'id_ID');
+    final formatter = DateFormat('d MMM yyyy');
     return formatter.format(date);
   }
 
   // Format date with time (e.g., "9 Des 2025, 10:30")
   static String formatDateTime(DateTime date) {
-    final formatter = DateFormat('d MMM yyyy, HH:mm', 'id_ID');
+    final formatter = DateFormat('d MMM yyyy, HH:mm');
     return formatter.format(date);
   }
 
   // Format time only (e.g., "10:30")
   static String formatTime(DateTime date) {
-    final formatter = DateFormat('HH:mm', 'id_ID');
+    final formatter = DateFormat('HH:mm');
     return formatter.format(date);
   }
 

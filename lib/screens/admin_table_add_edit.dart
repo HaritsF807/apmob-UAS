@@ -18,6 +18,7 @@ class _TableFormScreenState extends State<TableFormScreen> {
   final _capacityController = TextEditingController();
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
+  String _status = 'available';
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _TableFormScreenState extends State<TableFormScreen> {
     if (widget.table != null) {
       _tableNumberController.text = widget.table!.tableNumber;
       _capacityController.text = widget.table!.capacity.toString();
+      _status = widget.table!.status;
     }
   }
 
@@ -37,7 +39,7 @@ class _TableFormScreenState extends State<TableFormScreen> {
       final data = {
         'table_number': _tableNumberController.text,
         'capacity': int.parse(_capacityController.text),
-        'status': 'available',
+        'status': _status,
       };
 
       if (widget.table?.id != null) {
@@ -109,6 +111,24 @@ class _TableFormScreenState extends State<TableFormScreen> {
                 if (int.tryParse(v) == null) return 'Invalid number';
                 return null;
               },
+            ),
+            const SizedBox(height: 16),
+            
+            // Status Dropdown
+            DropdownButtonFormField<String>(
+              value: _status,
+              decoration: InputDecoration(
+                labelText: 'Status *',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                filled: true,
+                fillColor: Colors.grey[50],
+              ),
+              items: const [
+                DropdownMenuItem(value: 'available', child: Text('Available')),
+                DropdownMenuItem(value: 'occupied', child: Text('Occupied')),
+                DropdownMenuItem(value: 'reserved', child: Text('Reserved')),
+              ],
+              onChanged: (val) => setState(() => _status = val!),
             ),
             const SizedBox(height: 24),
             SizedBox(

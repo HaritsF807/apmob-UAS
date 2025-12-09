@@ -27,7 +27,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   bool _isLoading = false;
   bool _isLoadingCategories = false;
   String? _selectedCategoryId;
-  String _status = 'active';
+  String _status = 'available';
   List<Category> _categories = [];
 
   @override
@@ -236,16 +236,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               children: [
                 Expanded(
                   child: RadioListTile<String>(
-                    title: const Text('Active'),
-                    value: 'active',
+                    title: const Text('Available'),
+                    value: 'available',
                     groupValue: _status,
                     onChanged: (val) => setState(() => _status = val!),
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<String>(
-                    title: const Text('Inactive'),
-                    value: 'inactive',
+                    title: const Text('Unavailable'),
+                    value: 'unavailable',
                     groupValue: _status,
                     onChanged: (val) => setState(() => _status = val!),
                   ),

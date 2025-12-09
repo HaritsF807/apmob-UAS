@@ -6,7 +6,7 @@ class Product {
   final String? categoryId;
   final String? categoryName;
   final String? image;
-  final String status; // 'active' or 'inactive'
+  final String status; // 'available' or 'unavailable'
   final List<ProductVariant>? variants;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -19,7 +19,7 @@ class Product {
     this.categoryId,
     this.categoryName,
     this.image,
-    this.status = 'active',
+    this.status = 'available',
     this.variants,
     this.createdAt,
     this.updatedAt,
@@ -36,7 +36,7 @@ class Product {
       categoryId: json['category_id']?.toString(),
       categoryName: json['category_name'] ?? json['category']?['name'],
       image: json['image'],
-      status: json['status'] ?? 'active',
+      status: json['status'] ?? 'available',
       variants: json['variants'] != null
           ? (json['variants'] as List)
               .map((v) => ProductVariant.fromJson(v))
@@ -64,7 +64,7 @@ class Product {
     };
   }
 
-  bool get isActive => status == 'active';
+  bool get isActive => status == 'available';
 }
 
 class ProductVariant {

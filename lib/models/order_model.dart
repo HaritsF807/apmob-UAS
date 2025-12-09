@@ -36,13 +36,13 @@ class Order {
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['id']?.toString(),
-      orderNumber: json['order_number']?.toString() ?? json['order_id']?.toString() ?? '',
-      items: json['items'] != null
+      orderNumber: json['order_number']?.toString() ?? json['id']?.toString() ?? '',
+      items: json['items'] != null && json['items'] is List
           ? (json['items'] as List).map((i) => OrderItem.fromJson(i)).toList()
           : [],
-      subtotal: _parseDouble(json['subtotal']),
+      subtotal: _parseDouble(json['subtotal'] ?? json['total_price']),
       tax: _parseDouble(json['tax']),
-      total: _parseDouble(json['total']),
+      total: _parseDouble(json['total'] ?? json['total_price']),
       status: json['status'] ?? 'pending',
       paymentMethod: json['payment_method'],
       paymentStatus: json['payment_status'],

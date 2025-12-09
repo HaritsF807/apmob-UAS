@@ -25,7 +25,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer \$token',
+      if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
@@ -357,10 +357,18 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
+      // Handle different response structures
       if (body is List) {
         return List<Map<String, dynamic>>.from(body);
-      } else if (body is Map && body['data'] != null) {
-        return List<Map<String, dynamic>>.from(body['data']);
+      } else if (body is Map) {
+        // Check for data.orders structure (from ProcessOrderController.getOrderHistory)
+        if (body['data'] != null && body['data']['orders'] != null) {
+          return List<Map<String, dynamic>>.from(body['data']['orders']);
+        }
+        // Check for data array structure
+        else if (body['data'] != null && body['data'] is List) {
+          return List<Map<String, dynamic>>.from(body['data']);
+        }
       }
       return [];
     } else {
