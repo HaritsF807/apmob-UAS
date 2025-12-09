@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
-import 'main_navigation_screen.dart';
+import 'admin_main_navigation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -77,15 +77,11 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo Placeholder
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.coffee, size: 60, color: Color(AppConstants.primaryColorValue)),
+                  // Logo
+                  Image.asset(
+                    'assets/images/tama_logo.png',
+                    width: 180,
+                    height: 180,
                   ),
                   const SizedBox(height: 32),
                   

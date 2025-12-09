@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
-import 'dashboard_screen.dart';
-import 'product_list_screen.dart';
-import 'table_list_screen.dart';
-import 'order_list_screen.dart';
-import 'user_list_screen.dart';
-import 'category_list_screen.dart';
-import 'login_screen.dart';
+import 'admin_dashboard.dart';
+import 'admin_product_list.dart';
+import 'admin_table_list.dart';
+import 'admin_order_history.dart';
+import 'admin_user_list.dart';
+import 'admin_category_list.dart';
+import 'auth_login.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});

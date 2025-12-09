@@ -183,16 +183,31 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
                 fillColor: Colors.grey[50],
+                helperText: _categories.isEmpty && !_isLoadingCategories 
+                    ? 'No categories available. Please create categories first.' 
+                    : null,
+                helperStyle: const TextStyle(color: Colors.orange),
               ),
               items: _isLoadingCategories 
                   ? []
-                  : _categories
-                      .map((cat) => DropdownMenuItem(
-                            value: cat.id,
-                            child: Text(cat.name),
-                          ))
-                      .toList(),
-              onChanged: _isLoadingCategories ? null : (val) => setState(() => _selectedCategoryId = val),
+                  : _categories.isEmpty
+                      ? [
+                          const DropdownMenuItem(
+                            value: null,
+                            enabled: false,
+                            child: Text('No categories available',
+                                style: TextStyle(color: Colors.grey)),
+                          )
+                        ]
+                      : _categories
+                          .map((cat) => DropdownMenuItem(
+                                value: cat.id,
+                                child: Text(cat.name),
+                              ))
+                          .toList(),
+              onChanged: _isLoadingCategories || _categories.isEmpty 
+                  ? null 
+                  : (val) => setState(() => _selectedCategoryId = val),
               validator: (v) => v == null ? 'Category is required' : null,
               hint: _isLoadingCategories 
                   ? const Row(
@@ -206,7 +221,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         Text('Loading categories...'),
                       ],
                     )
-                  : null,
+                  : _categories.isEmpty
+                      ? const Text('No categories', style: TextStyle(color: Colors.grey))
+                      : const Text('Select a category'),
             ),
             const SizedBox(height: 16),
             

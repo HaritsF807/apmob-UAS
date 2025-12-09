@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
-// import 'screens/user_list_screen.dart'; // Can import if logical check for auth is added in main
+import 'screens/auth_login.dart';
+// import 'screens/admin_user_list.dart'; // Can import if logical check for auth is added in main
 
 void main() {
   runApp(const MyApp());

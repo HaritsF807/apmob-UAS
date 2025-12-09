@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/table_model.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
-import 'table_form_screen.dart';
+import 'admin_table_add_edit.dart';
 
 class TableListScreen extends StatefulWidget {
   const TableListScreen({super.key});

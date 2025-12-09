@@ -3,7 +3,7 @@ import '../models/order_model.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
-import 'order_detail_screen.dart';
+import 'admin_order_detail.dart';
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});

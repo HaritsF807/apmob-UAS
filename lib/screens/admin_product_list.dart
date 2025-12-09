@@ -4,7 +4,7 @@ import '../models/product_model.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
-import 'product_form_screen.dart';
+import 'admin_product_add_edit.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
