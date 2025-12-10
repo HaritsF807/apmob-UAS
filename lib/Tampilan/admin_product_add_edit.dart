@@ -63,8 +63,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           SnackBar(
             content: Text(
               widget.product != null
-                  ? 'Product updated successfully'
-                  : 'Product created successfully',
+                  ? 'Product Berhasil Diupdate'
+                  : 'Product Berhasil Dibuat',
             ),
           ),
         );
@@ -73,7 +73,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e')),
+          SnackBar(content: Text('Gagal: $e')),
         );
       }
     }
@@ -84,7 +84,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.product != null ? 'Edit Product' : 'New Product',
+          widget.product != null ? 'Ubah Product' : 'Buat Product',
           style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(AppConstants.primaryColorValue),
@@ -98,19 +98,19 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Product Name *',
+                labelText: 'Nama Product *',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
                 fillColor: Colors.grey[50],
               ),
-              validator: (v) => v!.isEmpty ? 'Name is required' : null,
+              validator: (v) => v!.isEmpty ? 'Nama Product is required' : null,
             ),
             const SizedBox(height: 16),
             
             TextFormField(
               controller: _descriptionController,
               decoration: InputDecoration(
-                labelText: 'Description (Optional)',
+                labelText: 'Deskripsi Product (Optional)',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
                 fillColor: Colors.grey[50],
@@ -122,7 +122,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             TextFormField(
               controller: _priceController,
               decoration: InputDecoration(
-                labelText: 'Price *',
+                labelText: 'Harga Product *',
                 prefixText: 'Rp ',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
@@ -130,16 +130,15 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               keyboardType: TextInputType.number,
               validator: (v) {
-                if (v!.isEmpty) return 'Price is required';
-                if (double.tryParse(v) == null) return 'Invalid price';
+                if (v!.isEmpty) return 'Harga Product is required';
+                if (double.tryParse(v) == null) return 'Invalid Harga Product';
                 return null;
               },
             ),
             const SizedBox(height: 16),
             
-            // Status Radio Buttons
             const Text(
-              'Status',
+              'Status Product',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             Row(
@@ -177,7 +176,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
-                        widget.product != null ? 'Update Product' : 'Create Product',
+                        widget.product != null ? 'Ubah Product' : 'Buat Product',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

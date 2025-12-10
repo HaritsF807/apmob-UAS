@@ -6,7 +6,7 @@ class Product {
   final String? categoryId;
   final String? categoryName;
   final String? image;
-  final String status; // 'available' or 'unavailable'
+  final String status;
   final List<ProductVariant>? variants;
   final DateTime? createdAt;
   final DateTime? updatedAt;
