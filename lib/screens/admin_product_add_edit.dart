@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
 import '../models/product_model.dart';
-import '../services/api_service.dart';
+import '../layanan/layanan_api.dart';
 import '../utils/constants.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final Product? product;
-  final List<Category> categories;
 
   const ProductFormScreen({
     super.key,
     this.product,
-    required this.categories,
   });
 
   @override
@@ -23,59 +20,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
-  final ApiService _apiService = ApiService();
+  final LayananApi _layananApi = LayananApi();
   bool _isLoading = false;
-  bool _isLoadingCategories = false;
-  String? _selectedCategoryId;
   String _status = 'available';
-  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
-    _categories = widget.categories;
-    
-    // Load categories if empty
-    if (_categories.isEmpty) {
-      _loadCategories();
-    }
     
     if (widget.product != null) {
       _nameController.text = widget.product!.name;
       _descriptionController.text = widget.product!.description ?? '';
       _priceController.text = widget.product!.price.toString();
-      _selectedCategoryId = widget.product!.categoryId;
       _status = widget.product!.status;
-    }
-  }
-
-  Future<void> _loadCategories() async {
-    setState(() => _isLoadingCategories = true);
-    try {
-      final categoryData = await _apiService.getCategories();
-      setState(() {
-        _categories = categoryData.map((json) => Category.fromJson(json)).toList();
-        _isLoadingCategories = false;
-      });
-    } catch (e) {
-      setState(() => _isLoadingCategories = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load categories: $e')),
-        );
-      }
     }
   }
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
-      return;
-    }
 
     setState(() => _isLoading = true);
 
@@ -86,14 +48,13 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             ? null
             : _descriptionController.text,
         'price': double.parse(_priceController.text),
-        'category_id': _selectedCategoryId,
         'status': _status,
       };
 
       if (widget.product?.id != null) {
-        await _apiService.updateProduct(widget.product!.id!, data);
+        await _layananApi.perbaruiProduk(widget.product!.id!, data);
       } else {
-        await _apiService.createProduct(data);
+        await _layananApi.buatProduk(data);
       }
 
       if (mounted) {
@@ -173,57 +134,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                 if (double.tryParse(v) == null) return 'Invalid price';
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            
-            DropdownButtonFormField<String>(
-              value: _selectedCategoryId,
-              decoration: InputDecoration(
-                labelText: 'Category *',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                filled: true,
-                fillColor: Colors.grey[50],
-                helperText: _categories.isEmpty && !_isLoadingCategories 
-                    ? 'No categories available. Please create categories first.' 
-                    : null,
-                helperStyle: const TextStyle(color: Colors.orange),
-              ),
-              items: _isLoadingCategories 
-                  ? []
-                  : _categories.isEmpty
-                      ? [
-                          const DropdownMenuItem(
-                            value: null,
-                            enabled: false,
-                            child: Text('No categories available',
-                                style: TextStyle(color: Colors.grey)),
-                          )
-                        ]
-                      : _categories
-                          .map((cat) => DropdownMenuItem(
-                                value: cat.id,
-                                child: Text(cat.name),
-                              ))
-                          .toList(),
-              onChanged: _isLoadingCategories || _categories.isEmpty 
-                  ? null 
-                  : (val) => setState(() => _selectedCategoryId = val),
-              validator: (v) => v == null ? 'Category is required' : null,
-              hint: _isLoadingCategories 
-                  ? const Row(
-                      children: [
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                        SizedBox(width: 12),
-                        Text('Loading categories...'),
-                      ],
-                    )
-                  : _categories.isEmpty
-                      ? const Text('No categories', style: TextStyle(color: Colors.grey))
-                      : const Text('Select a category'),
             ),
             const SizedBox(height: 16),
             

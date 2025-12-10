@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import '../layanan/layanan_api.dart';
 import '../utils/constants.dart';
-import 'admin_main_navigation.dart';
+import 'admin_product_list.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
-  final ApiService _apiService = ApiService();
+  final LayananApi _layananApi = LayananApi();
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -25,14 +25,14 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _apiService.login(
+      await _layananApi.masuk(
         _usernameController.text,
         _passwordController.text,
       );
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+          MaterialPageRoute(builder: (_) => const ProductListScreen()),
         );
       }
     } catch (e) {
