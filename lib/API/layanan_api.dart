@@ -28,52 +28,6 @@ class LayananApi {
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
-
-  // =============================================
-  // AUTENTIKASI
-  // =============================================
-  
-  Future<User> masuk(String username, String password) async {
-    final url = Uri.parse('${AppConstants.baseUrl}/login');
-    
-    print('🔵 PERCOBAAN LOGIN');
-    print('📍 URL: $url');
-    print('👤 Username: $username');
-    
-    try {
-      final respon = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
-      );
-
-      print('📡 Status Respon: ${respon.statusCode}');
-      print('📦 Body Respon: ${respon.body}');
-
-      if (respon.statusCode == 200) {
-        final isiRespon = jsonDecode(respon.body);
-        final pengguna = User.fromJson(isiRespon['data']);
-        if (pengguna.token != null) {
-          await simpanToken(pengguna.token!);
-          print('✅ Login berhasil! Token tersimpan.');
-        }
-        return pengguna;
-      } else {
-        print('❌ Login gagal dengan status ${respon.statusCode}');
-        throw Exception('Login gagal: ${respon.body}');
-      }
-    } catch (e) {
-      print('💥 ERROR: $e');
-      rethrow;
-    }
-  }
-
-  // =============================================
-  // ENDPOINT PRODUK
-  // =============================================
   
   Future<List<Map<String, dynamic>>> ambilProduk() async {
     final url = Uri.parse('${AppConstants.baseUrl}/products');

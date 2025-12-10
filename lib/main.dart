@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/auth_login.dart';
+import 'Tampilan/auth_login.dart';
 // import 'screens/admin_user_list.dart'; // Can import if logical check for auth is added in main
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
-import '../layanan/layanan_api.dart';
+import '../API/layanan_api.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
 import 'admin_product_add_edit.dart';
@@ -88,24 +88,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
-  Future<void> _toggleProductStatus(Product product) async {
-    if (product.id == null) return;
-    try {
-      await _layananApi.ubahStatusProduk(product.id!);
-      _loadData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product status updated')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e')),
-        );
-      }
-    }
-  }
+
 
   Future<void> _deleteProduct(Product product) async {
     final confirmed = await showDialog<bool>(
@@ -259,39 +242,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          product.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      // Status Indicator
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: product.isActive
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          product.isActive ? 'Active' : 'Inactive',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: product.isActive ? Colors.green : Colors.red,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -314,18 +270,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
             ),
 
             // Actions
-            Column(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    product.isActive ? Icons.toggle_on : Icons.toggle_off,
-                    color: product.isActive ? Colors.green : Colors.grey,
-                    size: 28,
-                  ),
-                  onPressed: () => _toggleProductStatus(product),
-                ),
-                PopupMenuButton(
-                  itemBuilder: (context) => [
+            PopupMenuButton(
+              itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'edit',
                       child: Row(
@@ -347,22 +293,20 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       ),
                     ),
                   ],
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductFormScreen(product: product),
-                        ),
-                      ).then((result) {
-                        if (result == true) _loadData();
-                      });
-                    } else if (value == 'delete') {
-                      _deleteProduct(product);
-                    }
-                  },
-                ),
-              ],
+              onSelected: (value) {
+                if (value == 'edit') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductFormScreen(product: product),
+                    ),
+                  ).then((result) {
+                    if (result == true) _loadData();
+                  });
+                } else if (value == 'delete') {
+                  _deleteProduct(product);
+                }
+              },
             ),
           ],
         ),
