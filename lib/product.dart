@@ -1,3 +1,4 @@
+// optimize performance
 // improve readability
 // enhance user experience
 import 'package:flutter/material.dart';
@@ -331,5 +332,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     );
   }
 }
+
 
 
