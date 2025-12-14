@@ -125,7 +125,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
       Map<String, dynamic> result;
       
       if (isEditMode) {
-        // Update product
         result = await ApiService.updateProduct(
           productId: widget.product!['product_id'] ?? widget.product!['id'].toString(),
           name: nameController.text,
@@ -134,7 +133,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
           status: selectedStatus,
         );
       } else {
-        // Create product
         result = await ApiService.createProduct(
           name: nameController.text,
           categoryId: categoryId,
