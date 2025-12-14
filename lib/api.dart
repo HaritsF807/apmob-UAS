@@ -19,7 +19,6 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        // Check if user is superadmin
         if (data['data']['role_id'] != 'RL001') {
           return {
             'success': false,
