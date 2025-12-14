@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
 
-  // untuk melakukan login
   static Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(
