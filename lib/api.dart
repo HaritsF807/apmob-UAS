@@ -1,10 +1,3 @@
-// update documentation
-// optimize performance
-// improve readability
-// enhance user experience
-// add comments
-// update documentation
-// optimize performance
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
