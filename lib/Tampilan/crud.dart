@@ -16,45 +16,45 @@ class ProductFormScreen extends StatefulWidget {
 }
 
 class _ProductFormScreenState extends State<ProductFormScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final LayananApi _layananApi = LayananApi();
-  bool _isLoading = false;
-  String _status = 'available';
+  final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final priceController = TextEditingController();
+  final LayananApi layananApi = LayananApi();
+  bool isLoading = false;
+  String status = 'available';
 
   @override
   void initState() {
     super.initState();
     
     if (widget.product != null) {
-      _nameController.text = widget.product!.name;
-      _descriptionController.text = widget.product!.description ?? '';
-      _priceController.text = widget.product!.price.toString();
-      _status = widget.product!.status;
+      nameController.text = widget.product!.name;
+      descriptionController.text = widget.product!.description ?? '';
+      priceController.text = widget.product!.price.toString();
+      status = widget.product!.status;
     }
   }
 
-  Future<void> _handleSubmit() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> handleSubmit() async {
+    if (!formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => isLoading = true);
 
     try {
       final data = {
-        'name': _nameController.text,
-        'description': _descriptionController.text.isEmpty
+        'name': nameController.text,
+        'description': descriptionController.text.isEmpty
             ? null
-            : _descriptionController.text,
-        'price': double.parse(_priceController.text),
-        'status': _status,
+            : descriptionController.text,
+        'price': double.parse(priceController.text),
+        'status': status,
       };
 
       if (widget.product?.id != null) {
-        await _layananApi.perbaruiProduk(widget.product!.id!, data);
+        await layananApi.perbaruiProduk(widget.product!.id!, data);
       } else {
-        await _layananApi.buatProduk(data);
+        await layananApi.buatProduk(data);
       }
 
       if (mounted) {
@@ -70,7 +70,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Gagal: $e')),
@@ -91,24 +91,24 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Form(
-        key: _formKey,
+        key: formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             TextFormField(
-              controller: _nameController,
+              controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Nama Product *',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: true,
                 fillColor: Colors.grey[50],
               ),
-              validator: (v) => v!.isEmpty ? 'Nama Product is required' : null,
+              validator: (v) => v!.isEmpty ? 'Nama Product Harus Diisi' : null,
             ),
             const SizedBox(height: 16),
             
             TextFormField(
-              controller: _descriptionController,
+              controller: descriptionController,
               decoration: InputDecoration(
                 labelText: 'Deskripsi Product (Optional)',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -120,7 +120,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             const SizedBox(height: 16),
             
             TextFormField(
-              controller: _priceController,
+              controller: priceController,
               decoration: InputDecoration(
                 labelText: 'Harga Product *',
                 prefixText: 'Rp ',
@@ -130,7 +130,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               keyboardType: TextInputType.number,
               validator: (v) {
-                if (v!.isEmpty) return 'Harga Product is required';
+                if (v!.isEmpty) return 'Harga Product Harus Diisi';
                 if (double.tryParse(v) == null) return 'Invalid Harga Product';
                 return null;
               },
@@ -147,16 +147,16 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                   child: RadioListTile<String>(
                     title: const Text('Available'),
                     value: 'available',
-                    groupValue: _status,
-                    onChanged: (val) => setState(() => _status = val!),
+                    groupValue: status,
+                    onChanged: (val) => setState(() => status = val!),
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Unavailable'),
                     value: 'unavailable',
-                    groupValue: _status,
-                    onChanged: (val) => setState(() => _status = val!),
+                    groupValue: status,
+                    onChanged: (val) => setState(() => status = val!),
                   ),
                 ),
               ],
@@ -166,14 +166,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             SizedBox(
               height: 50,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _handleSubmit,
+                onPressed: isLoading ? null : handleSubmit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(AppConstants.primaryColorValue),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: _isLoading
+                child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         widget.product != null ? 'Ubah Product' : 'Buat Product',
@@ -193,9 +193,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
+    nameController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
     super.dispose();
   }
 }

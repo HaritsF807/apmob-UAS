@@ -3,8 +3,8 @@ import '../models/product_model.dart';
 import '../API/layanan_api.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
-import 'admin_product_add_edit.dart';
-import 'auth_login.dart';
+import 'crud.dart';
+import 'login.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -14,29 +14,29 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  final LayananApi _layananApi = LayananApi();
-  List<Product> _products = [];
-  List<Product> _filteredProducts = [];
-  bool _isLoading = true;
-  String _searchQuery = '';
+  final LayananApi layananApi = LayananApi();
+  List<Product> products = [];
+  List<Product> filteredProducts = [];
+  bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    loadData();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  Future<void> loadData() async {
+    setState(() => isLoading = true);
     try {
-      final productData = await _layananApi.ambilProduk();
+      final productData = await layananApi.ambilProduk();
       setState(() {
-        _products = productData.map((json) => Product.fromJson(json)).toList();
-        _filterProducts();
-        _isLoading = false;
+        products = productData.map((json) => Product.fromJson(json)).toList();
+        filterProducts();
+        isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() => isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load products: $e')),
@@ -45,29 +45,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
-  void _filterProducts() {
-    var filtered = _products;
+  void filterProducts() {
+    var filtered = products;
 
     // Filter by search query
-    if (_searchQuery.isNotEmpty) {
+    if (searchQuery.isNotEmpty) {
       filtered = filtered.where((p) {
-        return p.name.toLowerCase().contains(_searchQuery.toLowerCase());
+        return p.name.toLowerCase().contains(searchQuery.toLowerCase());
       }).toList();
     }
 
-    setState(() => _filteredProducts = filtered);
+    setState(() => filteredProducts = filtered);
   }
 
-  Future<void> _logout() async {
+  Future<void> logout() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        content: const Text('Yakin ingin logout?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -79,7 +79,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
 
     if (confirmed == true) {
-      await _layananApi.hapusToken();
+      await layananApi.hapusToken();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -90,21 +90,21 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
 
 
-  Future<void> _deleteProduct(Product product) async {
+  Future<void> deleteProduct(Product product) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text('Are you sure you want to delete "${product.name}"?'),
+        title: const Text('Hapus Product'),
+        content: Text('Yakin ingin menghapus "${product.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('Hapus'),
           ),
         ],
       ),
@@ -112,17 +112,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
     if (confirmed == true && product.id != null) {
       try {
-        await _layananApi.hapusProduk(product.id!);
-        _loadData();
+        await layananApi.hapusProduk(product.id!);
+        loadData();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Product deleted successfully')),
+            const SnackBar(content: Text('Product berhasil dihapus')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Delete failed: $e')),
+            SnackBar(content: Text('Gagal menghapus: $e')),
           );
         }
       }
@@ -138,7 +138,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: _logout,
+            onPressed: logout,
             tooltip: 'Logout',
           ),
         ],
@@ -153,7 +153,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               builder: (_) => const ProductFormScreen(),
             ),
           );
-          if (result == true) _loadData();
+          if (result == true) loadData();
         },
       ),
       body: Column(
@@ -163,7 +163,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search products...',
+                hintText: 'Cari Product...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -173,27 +173,27 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ),
               onChanged: (val) {
                 setState(() {
-                  _searchQuery = val;
-                  _filterProducts();
+                  searchQuery = val;
+                  filterProducts();
                 });
               },
             ),
           ),
 
           Expanded(
-            child: _isLoading
+            child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
-                    onRefresh: _loadData,
-                    child: _filteredProducts.isEmpty
-                        ? const Center(child: Text('No products found'))
+                    onRefresh: loadData,
+                    child: filteredProducts.isEmpty
+                        ? const Center(child: Text('Tidak ada data'))
                         : ListView.separated(
                             padding: const EdgeInsets.all(16),
-                            itemCount: _filteredProducts.length,
+                            itemCount: filteredProducts.length,
                             separatorBuilder: (_, __) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
-                              final product = _filteredProducts[index];
-                              return _buildProductCard(product);
+                              final product = filteredProducts[index];
+                              return buildProductCard(product);
                             },
                           ),
                   ),
@@ -203,7 +203,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  Widget _buildProductCard(Product product) {
+  Widget buildProductCard(Product product) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -301,10 +301,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       builder: (_) => ProductFormScreen(product: product),
                     ),
                   ).then((result) {
-                    if (result == true) _loadData();
+                    if (result == true) loadData();
                   });
                 } else if (value == 'delete') {
-                  _deleteProduct(product);
+                  deleteProduct(product);
                 }
               },
             ),

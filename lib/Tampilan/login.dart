@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../API/layanan_api.dart';
 import '../utils/constants.dart';
-import 'admin_product_list.dart';
+import 'product_list.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,23 +11,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _rememberMe = false;
-  final LayananApi _layananApi = LayananApi();
+  final formKey = GlobalKey<FormState>();
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+  bool obscurePassword = true;
+  final LayananApi layananApi = LayananApi();
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> handleLogin() async {
+    if (!formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() => isLoading = true);
 
     try {
-      await _layananApi.masuk(
-        _usernameController.text,
-        _passwordController.text,
+      await layananApi.masuk(
+        usernameController.text,
+        passwordController.text,
       );
 
       if (mounted) {
@@ -36,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      print('🔴 LOGIN ERROR CAUGHT IN UI: $e');
+      print('Kesalahan Login: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -47,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -73,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -87,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   
                   // Title
                   const Text(
-                    "Welcome Back",
+                    "Admin Login",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w600,
@@ -97,52 +96,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
 
                   // Username
-                  _buildLabel("Username"),
+                  buildLabel("Username"),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: _usernameController,
-                    decoration: _inputDecoration(Icons.person, "Enter your username"),
-                    validator: (v) => v!.isEmpty ? "Username is required" : null,
+                    controller: usernameController,
+                    decoration: inputDecoration(Icons.person, "masukan username"),
+                    validator: (v) => v!.isEmpty ? "username tidak boleh kosong" : null,
                   ),
                   const SizedBox(height: 24),
 
                   // Password
-                  _buildLabel("Password"),
+                  buildLabel("Password"),
                   const SizedBox(height: 12),
                   TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: _inputDecoration(Icons.lock, "Enter your password").copyWith(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    decoration: inputDecoration(Icons.lock, "masukan password").copyWith(
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                          obscurePassword ? Icons.visibility : Icons.visibility_off,
                           color: const Color(0xFF6B6B6B),
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
                       ),
                     ),
-                    validator: (v) => v!.isEmpty ? "Password is required" : null,
+                    validator: (v) => v!.isEmpty ? "password tidak boleh kosong" : null,
                   ),
                   const SizedBox(height: 24),
-
-                  // Remember Me
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        activeColor: const Color(AppConstants.primaryColorValue),
-                        onChanged: (v) => setState(() => _rememberMe = v!),
-                      ),
-                      const Text(
-                        "Remember Me",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF6B6B6B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 32),
 
                   // Login Button
@@ -150,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
+                      onPressed: isLoading ? null : handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(AppConstants.primaryColorValue),
                         shape: RoundedRectangleBorder(
@@ -158,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: _isLoading
+                      child: isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               "Login",
@@ -179,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget buildLabel(String text) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
@@ -193,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(IconData icon, String hint) {
+  InputDecoration inputDecoration(IconData icon, String hint) {
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFC9C8C6),
