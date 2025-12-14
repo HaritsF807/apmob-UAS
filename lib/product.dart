@@ -197,11 +197,10 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        labelText: 'Nama Produk *',
+                        labelText: 'Nama Produk',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: const Icon(Icons.shopping_bag),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -216,11 +215,10 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                       controller: priceController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Harga *',
+                        labelText: 'Harga',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: const Icon(Icons.attach_money),
                         prefixText: 'Rp ',
                       ),
                       validator: (value) {
@@ -252,11 +250,10 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                       DropdownButtonFormField<int>(
                         value: selectedCategoryIndex,
                         decoration: InputDecoration(
-                          labelText: 'Kategori *',
+                          labelText: 'Kategori',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          prefixIcon: const Icon(Icons.category),
                         ),
                         items: List.generate(categories.length, (index) {
                           return DropdownMenuItem<int>(
@@ -281,11 +278,10 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                     DropdownButtonFormField<String>(
                       value: selectedStatus,
                       decoration: InputDecoration(
-                        labelText: 'Status *',
+                        labelText: 'Status',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        prefixIcon: const Icon(Icons.check_circle),
                       ),
                       items: statusOptions.map((status) {
                         return DropdownMenuItem<String>(
