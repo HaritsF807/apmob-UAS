@@ -1,3 +1,4 @@
+// refactor code structure
 // update logic
 // fix minor issues
 // improve code quality
@@ -391,6 +392,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     );
   }
 }
+
 
 
 
