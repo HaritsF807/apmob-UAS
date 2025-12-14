@@ -85,7 +85,7 @@ class ProductListScreenState extends State<ProductListScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        loadProducts(); // Reload products
+        loadProducts();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -255,7 +255,6 @@ class ProductListScreenState extends State<ProductListScreen> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Product Info
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +323,6 @@ class ProductListScreenState extends State<ProductListScreen> {
                                     ),
                                   ),
                                   
-                                  // Action Buttons
                                   Column(
                                     children: [
                                       IconButton(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 
 class ProductFormScreen extends StatefulWidget {
-  final Map<String, dynamic>? product; // null = add mode, not null = edit mode
+  final Map<String, dynamic>? product;
 
   const ProductFormScreen({super.key,this.product});
 
@@ -16,8 +16,8 @@ class ProductFormScreenState extends State<ProductFormScreen> {
   final priceController = TextEditingController();
   
   List<Map<String, dynamic>> categories = [];
-  int? selectedCategoryIndex; // Changed to index instead of id
-  String selectedStatus = 'available'; // Default value
+  int? selectedCategoryIndex;
+  String selectedStatus = 'available';
   bool isLoading = false;
   bool isLoadingCategories = true;
 
@@ -33,7 +33,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     super.initState();
     
     if (isEditMode) {
-      // Pre-fill form for edit mode
       nameController.text = widget.product!['name'] ?? '';
       priceController.text = widget.product!['price']?.toString() ?? '';
       selectedStatus = widget.product!['status'] ?? 'available';
@@ -58,17 +57,15 @@ class ProductFormScreenState extends State<ProductFormScreen> {
           categories = cats;
           isLoadingCategories = false;
           
-          // Set selected category by matching id (backend uses 'id' not 'category_id')
           if (isEditMode && categories.isNotEmpty) {
             final categoryId = widget.product!['category_id'];
             final index = categories.indexWhere((cat) => cat['id'] == categoryId);
             if (index != -1) {
               selectedCategoryIndex = index;
             } else if (categories.isNotEmpty) {
-              selectedCategoryIndex = 0; // Fallback to first
+              selectedCategoryIndex = 0;
             }
           } else if (categories.isNotEmpty) {
-            // For add mode, select first category by default
             selectedCategoryIndex = 0;
           }
         });
@@ -109,10 +106,8 @@ class ProductFormScreenState extends State<ProductFormScreen> {
       final price = double.parse(priceController.text);
       final selectedCategory = categories[selectedCategoryIndex!];
       
-      // Safely get id (backend uses 'id' field for categories, not 'category_id')
       final categoryId = (selectedCategory['id'] ?? '').toString();
       
-      // Validate categoryId is not empty
       if (categoryId.isEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +157,7 @@ class ProductFormScreenState extends State<ProductFormScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -203,7 +198,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Product Name
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
@@ -222,7 +216,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Price
                     TextFormField(
                       controller: priceController,
                       keyboardType: TextInputType.number,
@@ -246,7 +239,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Category Dropdown
                     if (categories.isEmpty)
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -290,7 +282,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                       ),
                     const SizedBox(height: 16),
 
-                    // Status Dropdown
                     DropdownButtonFormField<String>(
                       value: selectedStatus,
                       decoration: InputDecoration(
@@ -314,7 +305,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Submit Button
                     ElevatedButton(
                       onPressed: (isLoading || categories.isEmpty) ? null : submitForm,
                       style: ElevatedButton.styleFrom(

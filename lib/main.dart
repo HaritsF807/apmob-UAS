@@ -105,7 +105,6 @@ class LoginScreenState extends State<LoginScreen> {
       );
 
       if (result['success']) {
-        // Save token
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', result['token']);
         await prefs.setString('user_name', result['name']);
@@ -113,7 +112,6 @@ class LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        // Navigate to product list
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const ProductListScreen(),
@@ -151,14 +149,12 @@ class LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo/Icon
                   Image.asset(
                     'assets/images/tama_logo.png',
                     height: 120,
                   ),
                   const SizedBox(height: 24),
                   
-                  // Title
                   Text(
                     'Tama Coffee',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -177,7 +173,6 @@ class LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // Username Field
                   TextFormField(
                     controller: usernameController,
                     decoration: InputDecoration(
@@ -198,7 +193,6 @@ class LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password Field
                   TextFormField(
                     controller: passwordController,
                     obscureText: true,
@@ -220,7 +214,6 @@ class LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Error Message
                   if (errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -244,7 +237,6 @@ class LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                  // Login Button
                   ElevatedButton(
                     onPressed: isLoading ? null : login,
                     style: ElevatedButton.styleFrom(

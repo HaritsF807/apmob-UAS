@@ -3,9 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Ganti dengan IP komputer Anda jika test di device fisik
-  // Untuk emulator Android: 10.0.2.2
-  // Untuk emulator iOS: localhost
   static const String baseUrl = 'http://127.0.0.1:8000/api';
 
   // Login
@@ -51,13 +48,11 @@ class ApiService {
     }
   }
 
-  // Get Auth Token
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
   }
 
-  // Get Products
   static Future<List<Map<String, dynamic>>> getProducts() async {
     try {
       final token = await _getToken();
@@ -81,7 +76,6 @@ class ApiService {
     }
   }
 
-  // Get Categories
   static Future<List<Map<String, dynamic>>> getCategories() async {
     try {
       final token = await _getToken();
@@ -105,7 +99,6 @@ class ApiService {
     }
   }
 
-  // Create Product
   static Future<Map<String, dynamic>> createProduct({
     required String name,
     required String categoryId,
@@ -161,7 +154,6 @@ class ApiService {
     }
   }
 
-  // Update Product
   static Future<Map<String, dynamic>> updateProduct({
     required String productId,
     required String name,
@@ -208,7 +200,6 @@ class ApiService {
     }
   }
 
-  // Delete Product
   static Future<Map<String, dynamic>> deleteProduct(String productId) async {
     try {
       final token = await _getToken();
