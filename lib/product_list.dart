@@ -1,3 +1,4 @@
+// improve code quality
 // code cleanup
 // refactor code structure
 import 'package:flutter/material.dart';
@@ -388,5 +389,6 @@ class ProductListScreenState extends State<ProductListScreen> {
     );
   }
 }
+
 
 
