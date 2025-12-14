@@ -1,3 +1,4 @@
+// code cleanup
 // refactor code structure
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -387,4 +388,5 @@ class ProductListScreenState extends State<ProductListScreen> {
     );
   }
 }
+
 
