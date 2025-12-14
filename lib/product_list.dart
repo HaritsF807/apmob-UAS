@@ -24,6 +24,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     loadProducts();
   }
 
+  // ambil data user dari storage buat ditampilin di appbar
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -31,6 +32,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     });
   }
 
+  // ambil semua produk dari backend
   Future<void> loadProducts() async {
     setState(() {
       isLoading = true;
@@ -51,6 +53,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  // hapus produk setelah konfirmasi user
   Future<void> deleteProduct(String productId, String productName) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -105,6 +108,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
+  // proses logout dengan konfirmasi dulu
   Future<void> logout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -137,6 +141,7 @@ class ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
+  // format harga jadi format rupiah
   String formatPrice(dynamic price) {
     final priceNum = double.tryParse(price.toString()) ?? 0;
     return 'Rp ${priceNum.toStringAsFixed(0).replaceAllMapped(
@@ -145,11 +150,13 @@ class ProductListScreenState extends State<ProductListScreen> {
     )}';
   }
 
+  // tentuin warna status produk
   Color getStatusColor(String? status) {
     if (status == 'available') return Colors.green;
     return Colors.grey;
   }
 
+  // ubah status jadi bahasa indonesia
   String getStatusText(String? status) {
     if (status == 'available') return 'Tersedia';
     return 'Habis';

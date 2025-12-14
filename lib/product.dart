@@ -26,6 +26,7 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     {'value': 'unavailable', 'label': 'Habis'},
   ];
 
+  // cek apakah lagi mode edit atau tambah baru
   bool get isEditMode => widget.product != null;
 
   @override
@@ -48,6 +49,7 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     super.dispose();
   }
 
+  // ambil daftar kategori dari backend buat dropdown
   Future<void> loadCategories() async {
     try {
       final cats = await ApiService.getCategories();
@@ -85,6 +87,7 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     }
   }
 
+  // proses submit form, entah buat tambah atau update produk
   Future<void> submitForm() async {
     if (!formKey.currentState!.validate()) return;
 
