@@ -1,3 +1,4 @@
+// optimize performance
 // improve readability
 // enhance user experience
 // add comments
@@ -242,6 +243,7 @@ class ApiService {
     await prefs.remove('user_role');
   }
 }
+
 
 
 
