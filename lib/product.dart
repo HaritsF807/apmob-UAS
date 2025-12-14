@@ -122,11 +122,6 @@ class ProductFormScreenState extends State<ProductFormScreen> {
         return;
       }
       
-      print('Category ID: $categoryId');
-      print('Name: ${nameController.text}');
-      print('Price: $price');
-      print('Status: $selectedStatus');
-      
       Map<String, dynamic> result;
       
       if (isEditMode) {

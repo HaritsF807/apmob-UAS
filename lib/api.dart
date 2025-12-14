@@ -108,12 +108,6 @@ class ApiService {
     try {
       final token = await _getToken();
       
-      print('Creating product with:');
-      print('Name: $name');
-      print('Category ID: $categoryId');
-      print('Price: $price');
-      print('Status: $status');
-      
       final response = await http.post(
         Uri.parse('$baseUrl/products'),
         headers: {
@@ -129,9 +123,6 @@ class ApiService {
         }),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return {
@@ -146,7 +137,6 @@ class ApiService {
         };
       }
     } catch (e) {
-      print('Error creating product: $e');
       return {
         'success': false,
         'message': 'Error: ${e.toString()}',
