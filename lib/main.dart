@@ -45,6 +45,7 @@ class AuthCheckerState extends State<AuthChecker> {
     checkAuth();
   }
 
+  // cek apakah user udah login atau belum
   Future<void> checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -90,6 +91,7 @@ class LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // proses login ke backend
   Future<void> login() async {
     if (!formKey.currentState!.validate()) return;
 

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
 
-  // Login
+  // untuk melakukan login
   static Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(
@@ -48,11 +48,13 @@ class ApiService {
     }
   }
 
+  // ambil token user dari storage buat keperluan authentikasi
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
   }
 
+  // ambil semua data produk dari backend
   static Future<List<Map<String, dynamic>>> getProducts() async {
     try {
       final token = await _getToken();
@@ -76,6 +78,7 @@ class ApiService {
     }
   }
 
+  // ambil semua kategori produk yang ada
   static Future<List<Map<String, dynamic>>> getCategories() async {
     try {
       final token = await _getToken();
@@ -99,6 +102,7 @@ class ApiService {
     }
   }
 
+  // bikin produk baru, kirim semua data ke backend
   static Future<Map<String, dynamic>> createProduct({
     required String name,
     required String categoryId,
@@ -144,6 +148,7 @@ class ApiService {
     }
   }
 
+  // update data produk yang udah ada
   static Future<Map<String, dynamic>> updateProduct({
     required String productId,
     required String name,
@@ -190,6 +195,7 @@ class ApiService {
     }
   }
 
+  // hapus produk berdasarkan id
   static Future<Map<String, dynamic>> deleteProduct(String productId) async {
     try {
       final token = await _getToken();
@@ -223,7 +229,7 @@ class ApiService {
     }
   }
 
-  // Logout
+  // hapus semua data user dari storage buat logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
