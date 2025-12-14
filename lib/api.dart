@@ -1,3 +1,4 @@
+// optimize performance
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -237,3 +238,4 @@ class ApiService {
     await prefs.remove('user_role');
   }
 }
+
