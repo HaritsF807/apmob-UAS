@@ -1,70 +1,61 @@
-// enhance user experience
-// add comments
-// update documentation
-// optimize performance
-// improve readability
-// enhance user experience
 import 'package:flutter/material.dart';
-import 'api.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductFormScreen extends StatefulWidget {
   final Map<String, dynamic>? product;
 
-  const ProductFormScreen({super.key,this.product});
+  ProductFormScreen({this.product});
 
   @override
-  State<ProductFormScreen> createState() => ProductFormScreenState();
+  State<ProductFormScreen> createState() => _ProductFormScreenState();
 }
 
-class ProductFormScreenState extends State<ProductFormScreen> {
-  final formKey = GlobalKey<FormState>();
+class _ProductFormScreenState extends State<ProductFormScreen> {
   final nameController = TextEditingController();
   final priceController = TextEditingController();
-  
+
   List<Map<String, dynamic>> categories = [];
   int? selectedCategoryIndex;
   String selectedStatus = 'available';
   bool isLoading = false;
   bool isLoadingCategories = true;
 
-  final List<Map<String, String>> statusOptions = [
-    {'value': 'available', 'label': 'Tersedia'},
-    {'value': 'unavailable', 'label': 'Habis'},
-  ];
-
-  // cek apakah lagi mode edit atau tambah baru
   bool get isEditMode => widget.product != null;
 
   @override
   void initState() {
     super.initState();
-    
+
     if (isEditMode) {
       nameController.text = widget.product!['name'] ?? '';
       priceController.text = widget.product!['price']?.toString() ?? '';
       selectedStatus = widget.product!['status'] ?? 'available';
     }
-    
-    loadCategories();
+
+    fetchCategories();
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    priceController.dispose();
-    super.dispose();
-  }
-
-  // ambil daftar kategori dari backend buat dropdown
-  Future<void> loadCategories() async {
+  Future<void> fetchCategories() async {
     try {
-      final cats = await ApiService.getCategories();
-      
-      if (mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/categories'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
-          categories = cats;
+          categories = List<Map<String, dynamic>>.from(data['data']);
           isLoadingCategories = false;
-          
+
           if (isEditMode && categories.isNotEmpty) {
             final categoryId = widget.product!['category_id'];
             final index = categories.indexWhere((cat) => cat['id'] == categoryId);
@@ -79,30 +70,36 @@ class ProductFormScreenState extends State<ProductFormScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoadingCategories = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat kategori: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      setState(() {
+        isLoadingCategories = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat kategori: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
-  // proses submit form, entah buat tambah atau update produk
   Future<void> submitForm() async {
-    if (!formKey.currentState!.validate()) return;
+    if (nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nama produk tidak boleh kosong'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    if (priceController.text.isEmpty || double.tryParse(priceController.text) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Harga harus berupa angka'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
 
     if (selectedCategoryIndex == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pilih kategori terlebih dahulu'),
-          backgroundColor: Colors.orange,
-        ),
+        SnackBar(content: Text('Pilih kategori terlebih dahulu'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -112,58 +109,69 @@ class ProductFormScreenState extends State<ProductFormScreen> {
     });
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
       final price = double.parse(priceController.text);
       final selectedCategory = categories[selectedCategoryIndex!];
-      
       final categoryId = (selectedCategory['id'] ?? '').toString();
-      
+
       if (categoryId.isEmpty) {
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Category ID tidak valid'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Category ID tidak valid'), backgroundColor: Colors.red),
         );
         setState(() {
           isLoading = false;
         });
         return;
       }
-      
-      Map<String, dynamic> result;
-      
+
+      final body = jsonEncode({
+        'name': nameController.text,
+        'category_id': categoryId,
+        'price': price.toString(),
+        'description': '-',
+        'status': selectedStatus,
+      });
+
+      http.Response response;
+
       if (isEditMode) {
-        result = await ApiService.updateProduct(
-          productId: widget.product!['product_id'] ?? widget.product!['id'].toString(),
-          name: nameController.text,
-          categoryId: categoryId,
-          price: price,
-          status: selectedStatus,
+        final productId = widget.product!['product_id'] ?? widget.product!['id'].toString();
+        response = await http.put(
+          Uri.parse('http://127.0.0.1:8000/api/products/$productId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: body,
         );
       } else {
-        result = await ApiService.createProduct(
-          name: nameController.text,
-          categoryId: categoryId,
-          price: price,
-          status: selectedStatus,
+        response = await http.post(
+          Uri.parse('http://127.0.0.1:8000/api/products'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: body,
         );
       }
 
       if (!mounted) return;
 
-      if (result['success']) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message']),
+            content: Text(data['message']?.toString() ?? 'Berhasil'),
             backgroundColor: Colors.green,
           ),
         );
         Navigator.pop(context, true);
       } else {
+        final data = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message']),
+            content: Text(data['message']?.toString() ?? 'Gagal'),
             backgroundColor: Colors.red,
           ),
         );
@@ -192,152 +200,107 @@ class ProductFormScreenState extends State<ProductFormScreen> {
         title: Text(isEditMode ? 'Edit Produk' : 'Tambah Produk'),
       ),
       body: isLoadingCategories
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Nama Produk',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama produk tidak boleh kosong';
-                        }
-                        return null;
-                      },
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nama Produk',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  SizedBox(height: 16),
 
-                    TextFormField(
-                      controller: priceController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Harga',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixText: 'Rp ',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Harga tidak boleh kosong';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Harga harus berupa angka';
-                        }
-                        return null;
-                      },
+                  TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Harga',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixText: 'Rp ',
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  SizedBox(height: 16),
 
-                    if (categories.isEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange),
-                        ),
-                        child: const Text(
-                          'Tidak ada kategori. Tambahkan kategori terlebih dahulu.',
-                          style: TextStyle(color: Colors.orange),
-                        ),
-                      )
-                    else
-                      DropdownButtonFormField<int>(
-                        value: selectedCategoryIndex,
-                        decoration: InputDecoration(
-                          labelText: 'Kategori',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        items: List.generate(categories.length, (index) {
-                          return DropdownMenuItem<int>(
-                            value: index,
-                            child: Text(categories[index]['name']),
-                          );
-                        }),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedCategoryIndex = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Pilih kategori';
-                          }
-                          return null;
-                        },
+                  if (categories.isEmpty)
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange),
                       ),
-                    const SizedBox(height: 16),
-
-                    DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      child: Text(
+                        'Tidak ada kategori. Tambahkan kategori terlebih dahulu.',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<int>(
+                      value: selectedCategoryIndex,
                       decoration: InputDecoration(
-                        labelText: 'Status',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        labelText: 'Kategori',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      items: statusOptions.map((status) {
-                        return DropdownMenuItem<String>(
-                          value: status['value'],
-                          child: Text(status['label']!),
+                      items: List.generate(categories.length, (index) {
+                        return DropdownMenuItem<int>(
+                          value: index,
+                          child: Text(categories[index]['name']),
                         );
-                      }).toList(),
+                      }),
                       onChanged: (value) {
                         setState(() {
-                          selectedStatus = value ?? 'available';
+                          selectedCategoryIndex = value;
                         });
                       },
                     ),
-                    const SizedBox(height: 24),
+                  SizedBox(height: 16),
 
-                    ElevatedButton(
-                      onPressed: (isLoading || categories.isEmpty) ? null : submitForm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              isEditMode ? 'Update Produk' : 'Tambah Produk',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  ],
-                ),
+                    items: [
+                      DropdownMenuItem(value: 'available', child: Text('Tersedia')),
+                      DropdownMenuItem(value: 'unavailable', child: Text('Habis')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedStatus = value ?? 'available';
+                      });
+                    },
+                  ),
+                  SizedBox(height: 24),
+
+                  ElevatedButton(
+                    onPressed: (isLoading || categories.isEmpty) ? null : submitForm,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: isLoading
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            isEditMode ? 'Update Produk' : 'Tambah Produk',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                  ),
+                ],
               ),
             ),
     );
   }
 }
-
-
-
-
-
-

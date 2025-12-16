@@ -1,23 +1,16 @@
-// refactor code structure
-// update logic
-// fix minor issues
-// improve code quality
-// code cleanup
-// refactor code structure
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api.dart';
 import 'main.dart';
 import 'product.dart';
 
 class ProductListScreen extends StatefulWidget {
-  const ProductListScreen({super.key});
-
   @override
-  State<ProductListScreen> createState() => ProductListScreenState();
+  State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
-class ProductListScreenState extends State<ProductListScreen> {
+class _ProductListScreenState extends State<ProductListScreen> {
   List<Map<String, dynamic>> products = [];
   bool isLoading = true;
   String? errorMessage;
@@ -27,10 +20,9 @@ class ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     loadUserData();
-    loadProducts();
+    fetchProducts();
   }
 
-  // ambil data user dari storage buat ditampilin di appbar
   Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -38,43 +30,59 @@ class ProductListScreenState extends State<ProductListScreen> {
     });
   }
 
-  // ambil semua produk dari backend
-  Future<void> loadProducts() async {
+  Future<void> fetchProducts() async {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-      final prods = await ApiService.getProducts();
-      setState(() {
-        products = prods;
-        isLoading = false;
-      });
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/products'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          products = List<Map<String, dynamic>>.from(data['data']);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Gagal mengambil produk';
+          isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
-        errorMessage = e.toString();
+        errorMessage = 'Error: ${e.toString()}';
         isLoading = false;
       });
     }
   }
 
-  // hapus produk setelah konfirmasi user
   Future<void> deleteProduct(String productId, String productName) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
+        title: Text('Konfirmasi Hapus'),
         content: Text('Apakah Anda yakin ingin menghapus "$productName"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text('Batal'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: Text('Hapus'),
           ),
         ],
       ),
@@ -83,28 +91,34 @@ class ProductListScreenState extends State<ProductListScreen> {
     if (confirm != true) return;
 
     try {
-      final result = await ApiService.deleteProduct(productId);
-      
-      if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
 
-      if (result['success']) {
+      final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/api/products/$productId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message']),
+            content: Text('Produk berhasil dihapus'),
             backgroundColor: Colors.green,
           ),
         );
-        loadProducts();
+        fetchProducts();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message']),
+            content: Text('Gagal menghapus produk'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -114,21 +128,20 @@ class ProductListScreenState extends State<ProductListScreen> {
     }
   }
 
-  // proses logout dengan konfirmasi dulu
   Future<void> logout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Logout'),
-        content: const Text('Apakah Anda yakin ingin keluar?'),
+        title: Text('Konfirmasi Logout'),
+        content: Text('Apakah Anda yakin ingin keluar?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text('Batal'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Logout'),
+            child: Text('Logout'),
           ),
         ],
       ),
@@ -136,36 +149,24 @@ class ProductListScreenState extends State<ProductListScreen> {
 
     if (confirm != true) return;
 
-    await ApiService.logout();
-    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_name');
+    await prefs.remove('user_role');
+
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
 
-  // format harga jadi format rupiah
   String formatPrice(dynamic price) {
     final priceNum = double.tryParse(price.toString()) ?? 0;
     return 'Rp ${priceNum.toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
     )}';
-  }
-
-  // tentuin warna status produk
-  Color getStatusColor(String? status) {
-    if (status == 'available') return Colors.green;
-    return Colors.grey;
-  }
-
-  // ubah status jadi bahasa indonesia
-  String getStatusText(String? status) {
-    if (status == 'available') return 'Tersedia';
-    return 'Habis';
   }
 
   @override
@@ -175,49 +176,38 @@ class ProductListScreenState extends State<ProductListScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Produk', style: TextStyle(fontSize: 20)),
+            Text('Produk', style: TextStyle(fontSize: 20)),
             Text(
               'Halo, $userName',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: Icon(Icons.logout),
             onPressed: logout,
             tooltip: 'Logout',
           ),
         ],
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : errorMessage != null
               ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[300],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: loadProducts,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Coba Lagi'),
-                        ),
-                      ],
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                      SizedBox(height: 16),
+                      Text(errorMessage!, textAlign: TextAlign.center),
+                      SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: fetchProducts,
+                        icon: Icon(Icons.refresh),
+                        label: Text('Coba Lagi'),
+                      ),
+                    ],
                   ),
                 )
               : products.isEmpty
@@ -225,46 +215,32 @@ class ProductListScreenState extends State<ProductListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Belum ada produk',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap tombol + untuk menambah produk',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[500],
-                            ),
-                          ),
+                          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                          SizedBox(height: 16),
+                          Text('Belum ada produk', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                          SizedBox(height: 8),
+                          Text('Tap tombol + untuk menambah produk', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
                         ],
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: loadProducts,
+                      onRefresh: fetchProducts,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(16),
                         itemCount: products.length,
                         itemBuilder: (context, index) {
                           final product = products[index];
-                          
+                          final status = product['status'];
+                          final isAvailable = status == 'available';
+
                           return Card(
-                            margin: const EdgeInsets.only(bottom: 16),
+                            margin: EdgeInsets.only(bottom: 16),
                             elevation: 2,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(16),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -274,58 +250,44 @@ class ProductListScreenState extends State<ProductListScreen> {
                                       children: [
                                         Text(
                                           product['name'] ?? 'Produk',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                         ),
-                                        const SizedBox(height: 4),
+                                        SizedBox(height: 4),
                                         Text(
                                           formatPrice(product['price']),
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: Theme.of(context).primaryColor,
+                                            color: Colors.brown[700],
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
+                                        SizedBox(height: 8),
                                         Row(
                                           children: [
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
+                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
                                                 color: Colors.brown[50],
                                                 borderRadius: BorderRadius.circular(4),
                                               ),
                                               child: Text(
                                                 product['category_name'] ?? 'Kategori',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.brown[700],
-                                                ),
+                                                style: TextStyle(fontSize: 12, color: Colors.brown[700]),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
+                                            SizedBox(width: 8),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
+                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: getStatusColor(product['status']).withOpacity(0.1),
+                                                color: isAvailable ? Colors.green[50] : Colors.grey[200],
                                                 borderRadius: BorderRadius.circular(4),
-                                                border: Border.all(
-                                                  color: getStatusColor(product['status']),
-                                                ),
+                                                border: Border.all(color: isAvailable ? Colors.green : Colors.grey),
                                               ),
                                               child: Text(
-                                                getStatusText(product['status']),
+                                                isAvailable ? 'Tersedia' : 'Habis',
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  color: getStatusColor(product['status']),
+                                                  color: isAvailable ? Colors.green : Colors.grey,
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
@@ -335,29 +297,26 @@ class ProductListScreenState extends State<ProductListScreen> {
                                       ],
                                     ),
                                   ),
-                                  
                                   Column(
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.edit, size: 20),
+                                        icon: Icon(Icons.edit, size: 20),
                                         color: Colors.blue,
                                         onPressed: () async {
                                           final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ProductFormScreen(
-                                                product: product,
-                                              ),
+                                              builder: (context) => ProductFormScreen(product: product),
                                             ),
                                           );
                                           if (result == true) {
-                                            loadProducts();
+                                            fetchProducts();
                                           }
                                         },
                                         tooltip: 'Edit',
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete, size: 20),
+                                        icon: Icon(Icons.delete, size: 20),
                                         color: Colors.red,
                                         onPressed: () => deleteProduct(
                                           product['product_id'] ?? product['id'].toString(),
@@ -378,23 +337,15 @@ class ProductListScreenState extends State<ProductListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const ProductFormScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => ProductFormScreen()),
           );
           if (result == true) {
-            loadProducts();
+            fetchProducts();
           }
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Produk'),
+        icon: Icon(Icons.add),
+        label: Text('Tambah Produk'),
       ),
     );
   }
 }
-
-
-
-
-
-

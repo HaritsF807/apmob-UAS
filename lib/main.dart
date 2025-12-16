@@ -1,47 +1,34 @@
-// improve code quality
-// code cleanup
-// refactor code structure
-// update logic
-// fix minor issues
-// improve code quality
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api.dart';
 import 'product_list.dart';
 
 void main() {
-  runApp(const TamaMobileApp());
+  runApp(TamaMobileApp());
 }
 
 class TamaMobileApp extends StatelessWidget {
-  const TamaMobileApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tama Mobile - Super Admin',
+      title: 'Tama Mobile',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.brown,
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6D4C41),
-          brightness: Brightness.light,
-        ),
       ),
-      home: const AuthChecker(),
+      home: AuthChecker(),
     );
   }
 }
 
 class AuthChecker extends StatefulWidget {
-  const AuthChecker({super.key});
-
   @override
-  State<AuthChecker> createState() => AuthCheckerState();
+  State<AuthChecker> createState() => _AuthCheckerState();
 }
 
-class AuthCheckerState extends State<AuthChecker> {
+class _AuthCheckerState extends State<AuthChecker> {
   bool isLoading = true;
   bool isLoggedIn = false;
 
@@ -51,7 +38,6 @@ class AuthCheckerState extends State<AuthChecker> {
     checkAuth();
   }
 
-  // cek apakah user udah login atau belum
   Future<void> checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -65,41 +51,32 @@ class AuthCheckerState extends State<AuthChecker> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    return isLoggedIn ? const ProductListScreen() : const LoginScreen();
+    return isLoggedIn ? ProductListScreen() : LoginScreen();
   }
 }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
   @override
-  State<LoginScreen> createState() => LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
-  final formKey = GlobalKey<FormState>();
+class _LoginScreenState extends State<LoginScreen> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
   String? errorMessage;
 
-  @override
-  void dispose() {
-    usernameController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  // proses login ke backend
   Future<void> login() async {
-    if (!formKey.currentState!.validate()) return;
+    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
+      setState(() {
+        errorMessage = 'Username dan password tidak boleh kosong';
+      });
+      return;
+    }
 
     setState(() {
       isLoading = true;
@@ -107,154 +84,143 @@ class LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final result = await ApiService.login(
-        usernameController.text,
-        passwordController.text,
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/api/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': usernameController.text,
+          'password': passwordController.text,
+        }),
       );
 
-      if (result['success']) {
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        if (data['data']['role_id'] != 'RL001') {
+          setState(() {
+            errorMessage = 'Hanya Super Admin yang dapat login';
+            isLoading = false;
+          });
+          return;
+        }
+
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', result['token']);
-        await prefs.setString('user_name', result['name']);
-        await prefs.setString('user_role', result['role']);
+        await prefs.setString('auth_token', data['data']['token']);
+        await prefs.setString('user_name', data['data']['name']);
+        await prefs.setString('user_role', data['data']['role']);
 
         if (!mounted) return;
 
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const ProductListScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => ProductListScreen()),
         );
       } else {
         setState(() {
-          errorMessage = result['message'] ?? 'Login gagal';
+          errorMessage = data['message'] ?? 'Login gagal';
+          isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Error: ${e.toString()}';
+        errorMessage = 'Tidak dapat terhubung ke server';
+        isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Color(0xFFF5F5F5),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Image.asset(
-                    'assets/images/tama_logo.png',
-                    height: 120,
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/tama_logo.png', height: 120),
+                SizedBox(height: 24),
+                
+                Text(
+                  'Tama Coffee',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown[700],
                   ),
-                  const SizedBox(height: 24),
-                  
-                  Text(
-                    'Tama Coffee',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Super Admin Panel',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 48),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Super Admin Panel',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 48),
 
-                  TextFormField(
-                    controller: usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      prefixIcon: const Icon(Icons.person),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
+                TextField(
+                  controller: usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Username tidak boleh kosong';
-                      }
-                      return null;
-                    },
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
-                  const SizedBox(height: 16),
+                ),
+                SizedBox(height: 16),
 
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password tidak boleh kosong';
-                      }
-                      return null;
-                    },
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
-                  const SizedBox(height: 24),
+                ),
+                SizedBox(height: 24),
 
-                  if (errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[300]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: Colors.red[700]),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage!,
-                              style: TextStyle(color: Colors.red[700]),
-                            ),
+                if (errorMessage != null)
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[300]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red[700]),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            errorMessage!,
+                            style: TextStyle(color: Colors.red[700]),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
 
-                  ElevatedButton(
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
                     onPressed: isLoading ? null : login,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
@@ -262,16 +228,13 @@ class LoginScreenState extends State<LoginScreen> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
+                        : Text(
                             'Login',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -279,9 +242,3 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-
-
-
-
-
